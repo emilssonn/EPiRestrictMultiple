@@ -62,6 +62,8 @@
             _contentEvents.Service.CreatingContent += CreatingContent;
             _contentEvents.Service.MovingContent += MovingContent;
             _contentEvents.Service.SavingContent += SavingContent;
+
+            _eventsAttached = true;
         }
 
         /// <summary>
@@ -78,6 +80,8 @@
             _contentEvents.Service.CreatingContent -= CreatingContent;
             _contentEvents.Service.MovingContent -= MovingContent;
             _contentEvents.Service.SavingContent -= SavingContent;
+
+            _eventsAttached = false;
         }
 
         /// <summary>
