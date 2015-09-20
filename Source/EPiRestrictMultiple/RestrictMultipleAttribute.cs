@@ -36,7 +36,7 @@
         /// <value>
         /// The maximum.
         /// </value>
-        /// <exception cref="ArgumentException">Max cannot be 0 or less.;Max</exception>
+        /// <exception cref="System.ArgumentException">Max cannot be less than 0.;Max</exception>
         public int Max
         {
             get
@@ -48,7 +48,7 @@
             {
                 if (value < 0)
                 {
-                    throw new ArgumentException("Max cannot be 0 or less.", "Max");
+                    throw new ArgumentException("Max cannot be less than 0.", "Max");
                 }
                 _max = value;
             }
