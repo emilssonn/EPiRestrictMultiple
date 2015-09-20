@@ -1,9 +1,10 @@
+version: 1.0.0.{build}
 
-# version format
-version: 1.0.{build}
+build:
+  verbosity: minimal
 
 cache:
-  - packages -> **\packages.config  # preserve "packages" directory in the root of build folder but will reset it if packages.config is modified
+  - packages -> **\packages.config
 
 before_build:
   - cmd: nuget sources add -Name EPiServer -Source http://nuget.episerver.com/feed/packages.svc/
