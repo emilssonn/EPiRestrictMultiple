@@ -84,9 +84,7 @@
         /// Creatings the content.
         /// </summary>
         /// <param name="sender">The sender.</param>
-        /// <param name="e">The <see cref="ContentEventArgs" /> instance containing the event data.</param>
-        /// <exception cref="Exception">
-        /// </exception>
+        /// <param name="e">The <see cref="ContentEventArgs"/> instance containing the event data.</param>
         private void CreatingContent(object sender, ContentEventArgs e)
         {
             ValidateContent(e);
