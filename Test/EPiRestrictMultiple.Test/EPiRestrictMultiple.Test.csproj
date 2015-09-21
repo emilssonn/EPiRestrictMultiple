@@ -177,6 +177,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="ContentUsageComparerTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RestrictMultipleAttributeInitializationTest.cs" />
     <Compile Include="RestrictMultipleAttributeTest.cs" />

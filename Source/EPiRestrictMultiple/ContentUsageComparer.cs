@@ -5,8 +5,11 @@
 
     /// <summary>
     /// The <see cref="ContentUsageComparer"/> class.
+    /// This comparer is used only in the <see cref="RestrictMultipleAttributeInitialization"/> class.
+    /// It compares two <see cref="ContentUsage"/> instances by comparing the <see cref="ContentUsage.ContentLink"/>.ID property.
+    /// Null values is the same as an ID with a value of 0.
     /// </summary>
-    public class ContentUsageComparer : IEqualityComparer<ContentUsage>
+    internal class ContentUsageComparer : IEqualityComparer<ContentUsage>
     {
         /// <summary>
         /// Equalses the specified x.
@@ -16,7 +19,7 @@
         /// <returns></returns>
         public bool Equals(ContentUsage x, ContentUsage y)
         {
-            return x.ContentLink.ID == y.ContentLink.ID;
+            return GetHashCode(x) == GetHashCode(y);
         }
 
         /// <summary>
@@ -28,7 +31,7 @@
         /// </returns>
         public int GetHashCode(ContentUsage obj)
         {
-            if (obj == null)
+            if (obj == null || obj.ContentLink == null)
             {
                 return 0;
             }
