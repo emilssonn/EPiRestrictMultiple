@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EPiRestrictMultiple", "Sour
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EPiRestrictMultiple.Test", "Test\EPiRestrictMultiple.Test\EPiRestrictMultiple.Test.csproj", "{15722142-7432-4972-A641-EA3D07855581}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EPiRestrictMultiple.Sample", "Sample\EPiRestrictMultiple.Sample\EPiRestrictMultiple.Sample.csproj", "{FE63FF00-1DDF-492A-87A2-5CDD9AF6B96A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{15722142-7432-4972-A641-EA3D07855581}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{15722142-7432-4972-A641-EA3D07855581}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{15722142-7432-4972-A641-EA3D07855581}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FE63FF00-1DDF-492A-87A2-5CDD9AF6B96A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE63FF00-1DDF-492A-87A2-5CDD9AF6B96A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FE63FF00-1DDF-492A-87A2-5CDD9AF6B96A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE63FF00-1DDF-492A-87A2-5CDD9AF6B96A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
