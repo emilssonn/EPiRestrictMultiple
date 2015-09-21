@@ -1,12 +1,20 @@
 version: 1.0.0.{build}
 
 build:
-  verbosity: minimal
+  verbosity: detailed
   project: EPiRestrictMultiple.sln
 
 cache:
   - packages -> **\packages.config
 
+environment:
+  COVERALLS_REPO_TOKEN:
+    secure: oZmfA5OqHwUg8z5Ccnio8V3OXI/LOvO7w89d9a4n4Hf4oqyos4U+qXyY82+UlXJT
+
 before_build:
   - cmd: nuget sources add -Name EPiServer -Source http://nuget.episerver.com/feed/packages.svc/
   - cmd: nuget restore
+
+after_test:
+  - packages\OpenCover.4.6.166\tools\OpenCover.Console.exe -register:user -filter:"+[EPiRestrictMultiple]*" -target:"C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\IDE\MSTest.exe" -targetargs:"/testcontainer:Test/EPiRestrictMultiple.Test/bin/debug/EPiRestrictMultiple.Test.dll" -output:coverage.xml
+  - packages\coveralls.io.1.3.4\tools\coveralls.net.exe --opencover coverage.xml
