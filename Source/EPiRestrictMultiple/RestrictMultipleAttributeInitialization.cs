@@ -24,14 +24,14 @@
         private bool _eventsAttached = false;
 
         /// <summary>
-        /// The _content events
-        /// </summary>
-        private readonly Injected<IContentEvents> _contentEvents;
-
-        /// <summary>
         /// The _localization service
         /// </summary>
         private readonly Injected<LocalizationService> _localizationService;
+
+        /// <summary>
+        /// The _content events
+        /// </summary>
+        private readonly Injected<IContentEvents> _contentEvents;
 
         /// <summary>
         /// The _content type repository
@@ -61,7 +61,24 @@
 
             _contentEvents.Service.CreatingContent += CreatingContent;
             _contentEvents.Service.MovingContent += MovingContent;
-            _contentEvents.Service.SavingContent += SavingContent;
+
+            var res = _contentTypeRepository.Service.List().Any(x =>
+            {
+                if (x.ModelType.IsDefined(typeof(RestrictMultipleAttribute), false))
+                {
+                    var attribute = x.ModelType.GetCustomAttributes(typeof(RestrictMultipleAttribute), false)[0] as RestrictMultipleAttribute;
+                    if (!attribute.CultureSpecific)
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            });
+
+            if (res)
+            {
+                _contentEvents.Service.SavingContent += SavingContent;
+            }
 
             _eventsAttached = true;
         }

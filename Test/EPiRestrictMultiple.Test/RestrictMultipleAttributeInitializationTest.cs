@@ -45,7 +45,7 @@
             var contentReference = new ContentReference();
             contentReference.ID = 1;
             contentUsage.ContentLink = contentReference;
-            contentModelUsageMock.Setup(x => x.ListContentOfContentType(It.IsAny<ContentType>())).Returns(new List<ContentUsage>());
+            contentModelUsageMock.Setup(x => x.ListContentOfContentType(It.IsAny<ContentType>())).Returns(new List<ContentUsage>() { contentUsage });
 
             // IContentRepository
             var contentRepositoryMock = new Mock<IContentRepository>();
@@ -64,7 +64,7 @@
             serviceLocatorMock.Setup(x => x.GetInstance<IContentTypeRepository>()).Returns(contentTypeRepositoryMock.Object);
             serviceLocatorMock.Setup(x => x.GetInstance<IContentRepository>()).Returns(contentRepositoryMock.Object);
             serviceLocatorMock.Setup(x => x.GetInstance<IContentModelUsage>()).Returns(contentModelUsageMock.Object);
-            serviceLocatorMock.Setup(x => x.GetInstance<MemoryLocalizationService>()).Returns(localizationService);
+            serviceLocatorMock.Setup(x => x.GetInstance<LocalizationService>()).Returns(localizationService);
 
             ServiceLocator.SetLocator(serviceLocatorMock.Object);
         }
@@ -77,17 +77,29 @@
         {
         }
 
-        public void Test()
+        /// <summary>
+        /// Determines whether this instance [can not create more than one page].
+        /// </summary>
+        [TestMethod]
+        public void CanNotCreateMoreThanOnePage()
         {
-            var content = new Mock<IContent>();
-            content.Setup(x => x.GetOriginalType()).Returns(typeof(TestPage));
+            var initializationEngine = new InitializationEngine();
+            var restrictMultipleAttributeInitialization = new RestrictMultipleAttributeInitialization();
+
+            restrictMultipleAttributeInitialization.Initialize(initializationEngine);
+
+            var content = new Mock<TestPage>();
             content.Setup(x => x.ContentTypeID).Returns(1);
 
-            var contentEventArgsMock = new Mock<ContentEventArgs>();
-            contentEventArgsMock.Setup(x => x.Content).Returns(content.Object);
-            contentEventArgsMock.Setup(x => x.ContentLink.ID).Returns(1);
+            var contentLink = new ContentReference(1);
+            var contentEventArgs = new ContentEventArgs(contentLink, content.Object);
 
-            _contentEventsMock.Raise(x => x.CreatingContent += null, contentEventArgsMock.Object);
+            _contentEventsMock.Raise(x => x.CreatingContent += null, contentEventArgs);
+
+            Assert.IsTrue(contentEventArgs.CancelAction);
+            Assert.IsInstanceOfType(contentEventArgs.CancelReason, typeof(string));
+
+            restrictMultipleAttributeInitialization.Uninitialize(initializationEngine);
         }
 
         /// <summary>
@@ -127,8 +139,68 @@
             restrictMultipleAttributeInitialization.Uninitialize(initializationEngine);
         }
 
+        /// <summary>
+        /// Determines whether this instance [can initialize two times].
+        /// </summary>
+        [TestMethod]
+        public void CanInitializeTwoTimes()
+        {
+            var initializationEngine = new InitializationEngine();
+            var restrictMultipleAttributeInitialization = new RestrictMultipleAttributeInitialization();
+
+            restrictMultipleAttributeInitialization.Initialize(initializationEngine);
+            restrictMultipleAttributeInitialization.Initialize(initializationEngine);
+        }
+
+        /// <summary>
+        /// Determines whether this instance [can uninitialize two times].
+        /// </summary>
+        [TestMethod]
+        public void CanUninitializeTwoTimes()
+        {
+            var initializationEngine = new InitializationEngine();
+            var restrictMultipleAttributeInitialization = new RestrictMultipleAttributeInitialization();
+
+            restrictMultipleAttributeInitialization.Uninitialize(initializationEngine);
+            restrictMultipleAttributeInitialization.Uninitialize(initializationEngine);
+        }
+
+        /// <summary>
+        /// Determines whether this instance [can initialize and uninitialize two times].
+        /// </summary>
+        [TestMethod]
+        public void CanInitializeAndUninitializeTwoTimes()
+        {
+            var initializationEngine = new InitializationEngine();
+            var restrictMultipleAttributeInitialization = new RestrictMultipleAttributeInitialization();
+
+            restrictMultipleAttributeInitialization.Initialize(initializationEngine);
+            restrictMultipleAttributeInitialization.Initialize(initializationEngine);
+            restrictMultipleAttributeInitialization.Uninitialize(initializationEngine);
+            restrictMultipleAttributeInitialization.Uninitialize(initializationEngine);
+        }
+
+        /// <summary>
+        /// Determines whether this instance [can initialize and uninitialize multiple times].
+        /// </summary>
+        [TestMethod]
+        public void CanInitializeAndUninitializeMultipleTimes()
+        {
+            var initializationEngine = new InitializationEngine();
+            var restrictMultipleAttributeInitialization = new RestrictMultipleAttributeInitialization();
+
+            restrictMultipleAttributeInitialization.Initialize(initializationEngine);
+            restrictMultipleAttributeInitialization.Initialize(initializationEngine);
+            restrictMultipleAttributeInitialization.Uninitialize(initializationEngine);
+            restrictMultipleAttributeInitialization.Initialize(initializationEngine);
+            restrictMultipleAttributeInitialization.Uninitialize(initializationEngine);
+            restrictMultipleAttributeInitialization.Initialize(initializationEngine);
+            restrictMultipleAttributeInitialization.Uninitialize(initializationEngine);
+            restrictMultipleAttributeInitialization.Uninitialize(initializationEngine);
+        }
+
         [RestrictMultiple]
-        private class TestPage : PageData
+        public class TestPage : PageData
         {
 
         }
