@@ -15,7 +15,7 @@
         Description = "",
         GroupName = SystemTabNames.Content,
         Order = 300)]
-    [RestrictMultiple(Max = 1, CultureSpecific = true, IncludeWasteBasket = false)]
+    [RestrictMultiple(Max = 1, IncludeWasteBasket = false)]
     public class MaxOneCultureSpecificPage : PageData
     {
         /// <summary>

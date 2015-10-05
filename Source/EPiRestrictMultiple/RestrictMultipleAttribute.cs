@@ -14,14 +14,14 @@
         private int _max = 1;
 
         /// <summary>
-        /// The _culture specific
-        /// </summary>
-        private bool _cultureSpecific = true;
-
-        /// <summary>
         /// The _include waste basket
         /// </summary>
         private bool _includeWasteBasket = true;
+
+        /// <summary>
+        /// The _disable at maximum
+        /// </summary>
+        private bool _disableAtMax = true;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RestrictMultipleAttribute"/> class.
@@ -55,25 +55,6 @@
         }
 
         /// <summary>
-        /// Gets or sets a value indicating whether [culture specific].
-        /// </summary>
-        /// <value>
-        ///   <c>true</c> if [culture specific]; otherwise, <c>false</c>.
-        /// </value>
-        public bool CultureSpecific
-        {
-            get
-            {
-                return _cultureSpecific;
-            }
-
-            set
-            {
-                _cultureSpecific = value;
-            }
-        }
-
-        /// <summary>
         /// Gets or sets a value indicating whether [include waste basket].
         /// </summary>
         /// <value>
@@ -89,6 +70,25 @@
             set
             {
                 _includeWasteBasket = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether [disable at maximum].
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if [disable at maximum]; otherwise, <c>false</c>.
+        /// </value>
+        public bool DisableAtMax
+        {
+            get
+            {
+                return _disableAtMax;
+            }
+
+            set
+            {
+                _disableAtMax = value;
             }
         }
     }

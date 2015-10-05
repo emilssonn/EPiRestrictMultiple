@@ -19,9 +19,9 @@
     public class RestrictMultipleAttributeInitialization : IInitializableModule
     {
         /// <summary>
-        /// The _events attached
+        /// The _initialized
         /// </summary>
-        private bool _eventsAttached = false;
+        private bool _initialized = false;
 
         /// <summary>
         /// The _localization service
@@ -54,7 +54,7 @@
         /// <param name="context">The context.</param>
         public void Initialize(InitializationEngine context)
         {
-            if (_eventsAttached)
+            if (_initialized)
             {
                 return;
             }
@@ -62,25 +62,29 @@
             _contentEvents.Service.CreatingContent += CreatingContent;
             _contentEvents.Service.MovingContent += MovingContent;
 
-            var res = _contentTypeRepository.Service.List().Any(x =>
+            var contentTypes = _contentTypeRepository.Service.List();
+            var disableAtMax = false;
+
+            foreach (var contentType in contentTypes)
             {
-                if (x.ModelType.IsDefined(typeof(RestrictMultipleAttribute), false))
+                if (contentType.ModelType.IsDefined(typeof(RestrictMultipleAttribute), false))
                 {
-                    var attribute = x.ModelType.GetCustomAttributes(typeof(RestrictMultipleAttribute), false)[0] as RestrictMultipleAttribute;
-                    if (!attribute.CultureSpecific)
+                    var attribute = contentType.ModelType.GetCustomAttributes(typeof(RestrictMultipleAttribute), false)[0] as RestrictMultipleAttribute;
+                    if (attribute.DisableAtMax)
                     {
-                        return true;
+                        disableAtMax = true;
+                        break;
                     }
                 }
-                return false;
-            });
-
-            if (res)
-            {
-                _contentEvents.Service.SavingContent += SavingContent;
             }
 
-            _eventsAttached = true;
+            if (disableAtMax)
+            {
+                _contentEvents.Service.CreatedContent += CreatedContent;
+                _contentEvents.Service.DeletedContent += DeletedContent;
+            }
+
+            _initialized = true;
         }
 
         /// <summary>
@@ -89,16 +93,37 @@
         /// <param name="context">The context.</param>
         public void Uninitialize(InitializationEngine context)
         {
-            if (!_eventsAttached)
+            if (!_initialized)
             {
                 return;
             }
 
             _contentEvents.Service.CreatingContent -= CreatingContent;
             _contentEvents.Service.MovingContent -= MovingContent;
-            _contentEvents.Service.SavingContent -= SavingContent;
+            _contentEvents.Service.CreatedContent -= CreatedContent;
+            _contentEvents.Service.DeletedContent -= DeletedContent;
 
-            _eventsAttached = false;
+            _initialized = false;
+        }
+
+        /// <summary>
+        /// Deleted the content.
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="e">The <see cref="DeleteContentEventArgs"/> instance containing the event data.</param>
+        private void DeletedContent(object sender, DeleteContentEventArgs e)
+        {
+            UpdateContent(e, true);
+        }
+
+        /// <summary>
+        /// Created the content.
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="e">The <see cref="ContentEventArgs"/> instance containing the event data.</param>
+        private void CreatedContent(object sender, ContentEventArgs e)
+        {
+            UpdateContent(e, false);
         }
 
         /// <summary>
@@ -127,36 +152,6 @@
         }
 
         /// <summary>
-        /// Savings the content.
-        /// </summary>
-        /// <param name="sender">The sender.</param>
-        /// <param name="e">The <see cref="ContentEventArgs"/> instance containing the event data.</param>
-        private void SavingContent(object sender, ContentEventArgs e)
-        {
-            var type = e.Content.GetOriginalType();
-
-            if (type.IsDefined(typeof(RestrictMultipleAttribute), false))
-            {
-                var attribute = type.GetCustomAttributes(typeof(RestrictMultipleAttribute), false)[0] as RestrictMultipleAttribute;
-
-                if (!attribute.CultureSpecific)
-                {
-                    var existingLanguages = type.GetProperty("ExistingLanguages").GetValue(e.Content, null) as IEnumerable<CultureInfo>;
-                    if (existingLanguages.Any() && !existingLanguages.Contains(type.GetProperty("Language").GetValue(e.Content, null) as CultureInfo))
-                    {
-                        var contentType = _contentTypeRepository.Service.Load(e.Content.ContentTypeID);
-                        var message = string.Format(_localizationService.Service.GetString("/RestrictMultiple/max", "You can only create {0} instances of the {1} type."),
-                            attribute.Max, contentType.LocalizedFullName);
-                        e.CancelAction = true;
-                        e.CancelReason = message;
-
-                        return;
-                    }
-                }
-            }
-        }
-
-        /// <summary>
         /// Validates the content.
         /// </summary>
         /// <param name="e">The <see cref="ContentEventArgs"/> instance containing the event data.</param>
@@ -171,37 +166,12 @@
 
                 var contentType = _contentTypeRepository.Service.Load(e.Content.ContentTypeID);
 
-                var usages = _contentModelUsage.Service.ListContentOfContentType(contentType);
-
-                if (moving)
-                {
-                    usages = usages.Where(x => x.ContentLink.ID != e.ContentLink.ID).ToList();
-                }
-
-                if (attribute.CultureSpecific)
-                {
-                    usages = usages.Distinct(new ContentUsageComparer()).ToList();
-                }
-
-                var totalCount = usages.Count();
-
-                if (!attribute.IncludeWasteBasket)
-                {
-                    var contents = _contentRepository.Service.GetItems(usages.Select(x => x.ContentLink), LanguageSelector.AutoDetect()).Where(x => x.ParentLink != ContentReference.WasteBasket);
-
-                    totalCount = contents.Count();
-                }
+                var totalCount = GetTotalCount(attribute, contentType, moving, e.ContentLink);
 
                 if (totalCount >= attribute.Max)
                 {
                     string resourceKey = "/RestrictMultiple/max";
                     string message = "You can only create {0} instances of the {1} type.";
-
-                    if (attribute.CultureSpecific)
-                    {
-                        resourceKey = "/RestrictMultiple/culturemax";
-                        message = "You can only create {0} instances of the {1} type across all languages.";
-                    }
 
                     e.CancelAction = true;
                     e.CancelReason = string.Format(_localizationService.Service.GetString(resourceKey, message), attribute.Max, contentType.LocalizedFullName);
@@ -209,6 +179,64 @@
                     return;
                 }
             }
+        }
+
+        /// <summary>
+        /// Updates the content.
+        /// </summary>
+        /// <param name="e">The <see cref="ContentEventArgs"/> instance containing the event data.</param>
+        /// <param name="availability">if set to <c>true</c> [availability].</param>
+        private void UpdateContent(ContentEventArgs e, bool availability)
+        {
+            var type = e.Content.GetOriginalType();
+
+            if (type.IsDefined(typeof(RestrictMultipleAttribute), false))
+            {
+                var attribute = type.GetCustomAttributes(typeof(RestrictMultipleAttribute), false)[0] as RestrictMultipleAttribute;
+
+                var contentType = _contentTypeRepository.Service.Load(e.Content.ContentTypeID);
+
+                var totalCount = GetTotalCount(attribute, contentType);
+
+                if (attribute.DisableAtMax &&
+                    ((!availability && totalCount >= attribute.Max && contentType.IsAvailable) || (availability && totalCount < attribute.Max && !contentType.IsAvailable)))
+                {
+                    var clone = (ContentType)contentType.CreateWritableClone();
+                    clone.IsAvailable = availability;
+                    _contentTypeRepository.Service.Save(clone);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the total count.
+        /// </summary>
+        /// <param name="attribute">The attribute.</param>
+        /// <param name="contentType">Type of the content.</param>
+        /// <param name="moving">if set to <c>true</c> [moving].</param>
+        /// <param name="contentReference">The content reference.</param>
+        /// <returns></returns>
+        private int GetTotalCount(RestrictMultipleAttribute attribute, ContentType contentType, bool moving = false, ContentReference contentReference = null)
+        {
+            var usages = _contentModelUsage.Service.ListContentOfContentType(contentType);
+
+            if (moving)
+            {
+                usages = usages.Where(x => x.ContentLink.ID != contentReference.ID).ToList();
+            }
+
+            usages = usages.Distinct(new ContentUsageComparer()).ToList();
+
+            var totalCount = usages.Count();
+
+            if (!attribute.IncludeWasteBasket)
+            {
+                var contents = _contentRepository.Service.GetItems(usages.Select(x => x.ContentLink), LanguageSelector.AutoDetect()).Where(x => x.ParentLink != ContentReference.WasteBasket);
+
+                totalCount = contents.Count();
+            }
+
+            return totalCount;
         }
     }
 }

@@ -14,7 +14,6 @@
 		{
             var attribute = new RestrictMultipleAttribute();
 
-            Assert.IsTrue(attribute.CultureSpecific);
             Assert.IsTrue(attribute.IncludeWasteBasket);
             Assert.AreEqual(1, attribute.Max);
 		}
@@ -27,12 +26,10 @@
         {
             var attribute = new RestrictMultipleAttribute()
             {
-                CultureSpecific = false,
                 IncludeWasteBasket = false,
                 Max = 2
             };
 
-            Assert.IsFalse(attribute.CultureSpecific);
             Assert.IsFalse(attribute.IncludeWasteBasket);
             Assert.AreEqual(2, attribute.Max);
         }

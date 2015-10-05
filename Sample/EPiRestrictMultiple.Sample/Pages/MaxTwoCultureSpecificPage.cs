@@ -12,7 +12,7 @@
         Description = "",
         GroupName = SystemTabNames.Content,
         Order = 400)]
-    [RestrictMultiple(Max = 2, CultureSpecific = true, IncludeWasteBasket = false)]
+    [RestrictMultiple(Max = 2, IncludeWasteBasket = false)]
     public class MaxTwoCultureSpecificPage : PageData
     {
         /// <summary>
